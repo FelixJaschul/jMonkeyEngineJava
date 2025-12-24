@@ -9,6 +9,7 @@ clean:
 run:
 	./gradlew --no-daemon run
 
+
 n: clean
 	nvim
 
