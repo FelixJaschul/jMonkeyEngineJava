@@ -15,7 +15,6 @@ public class PROJECT extends SimpleApplication {
 
     public static void main(String[] args) {
         PROJECT app = new PROJECT();
-        app.setShowSettings(false); //Settings dialog not supported on mac
         app.start();
     }
 
@@ -24,7 +23,7 @@ public class PROJECT extends SimpleApplication {
         Box b = new Box(1, 1, 1);
         Geometry geom = new Geometry("Box", b);
 
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        Material mat = new Material(assetManager, "Common/MatDefs/Misc/fakeLighting.j3md");
         mat.setColor("Color", ColorRGBA.Blue);
         geom.setMaterial(mat);
 
