@@ -24,14 +24,16 @@ import com.jme3.scene.shape.Line;
 import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 
-public class PROJECT extends SimpleApplication implements ActionListener {
+public class PROJECT extends SimpleApplication implements ActionListener
+{
 
     private EState e_state;
     private GState g_state;
     private BulletAppState b_state;
     private Node l_node;
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         PROJECT app = new PROJECT();
         AppSettings settings = new AppSettings(true);
         settings.setTitle("TEST");
@@ -41,7 +43,8 @@ public class PROJECT extends SimpleApplication implements ActionListener {
     }
 
     @Override
-    public void simpleInitApp() {
+    public void simpleInitApp()
+    {
         b_state = new BulletAppState();
         stateManager.attach(b_state);
 
