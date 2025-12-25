@@ -6,7 +6,6 @@ import com.jme3.app.state.BaseAppState;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
@@ -27,10 +26,10 @@ import com.jme3.system.AppSettings;
 
 public class PROJECT extends SimpleApplication implements ActionListener {
 
-    private EditorState editorState;
-    private GameState gameState;
-    private BulletAppState bulletAppState;
-    private Node levelNode;
+    private EState e_state;
+    private GState g_state;
+    private BulletAppState b_state;
+    private Node l_node;
 
     public static void main(String[] args) {
         PROJECT app = new PROJECT();
@@ -43,11 +42,11 @@ public class PROJECT extends SimpleApplication implements ActionListener {
 
     @Override
     public void simpleInitApp() {
-        bulletAppState = new BulletAppState();
-        stateManager.attach(bulletAppState);
+        b_state = new BulletAppState();
+        stateManager.attach(b_state);
 
-        levelNode = new Node("LevelNode");
-        rootNode.attachChild(levelNode);
+        l_node = new Node("LevelNode");
+        rootNode.attachChild(l_node);
 
         Box floorBox = new Box(150, 0.1f, 150);
         Geometry floor = new Geometry("Floor", floorBox);
@@ -59,12 +58,12 @@ public class PROJECT extends SimpleApplication implements ActionListener {
         
         RigidBodyControl floorPhys = new RigidBodyControl(0);
         floor.addControl(floorPhys);
-        bulletAppState.getPhysicsSpace().add(floorPhys);
+        b_state.getPhysicsSpace().add(floorPhys);
 
-        editorState = new EditorState();
-        gameState = new GameState();
+        e_state = new EState();
+        g_state = new GState();
 
-        stateManager.attach(gameState);
+        stateManager.attach(g_state);
         inputManager.addMapping("ToggleMode", new KeyTrigger(KeyInput.KEY_F1), new KeyTrigger(KeyInput.KEY_F2));
         inputManager.addListener(this, "ToggleMode");
         
@@ -82,33 +81,54 @@ public class PROJECT extends SimpleApplication implements ActionListener {
     }
 
     @Override
-    public void onAction(String name, boolean isPressed, float tpf) {
-        if (name.equals("ToggleMode") && isPressed) {
-            if (stateManager.hasState(editorState)) {
-                stateManager.detach(editorState);
-                stateManager.attach(gameState);
-            } else {
-                stateManager.detach(gameState);
-                stateManager.attach(editorState);
+    public void onAction(String name, boolean isPressed, float tpf)
+    {
+        if (name.equals("ToggleMode") && isPressed)
+        {
+            if (stateManager.hasState(e_state))
+            {
+                stateManager.detach(e_state);
+                stateManager.attach(g_state);
+                return;
+            }
+            if (!stateManager.hasState(g_state))
+            {
+                stateManager.detach(g_state);
+                stateManager.attach(e_state);
+                return;
             }
         }
     }
 
-    private class EditorState extends BaseAppState implements ActionListener {
+    private class EState extends BaseAppState implements ActionListener
+    {
         private final Node editorNode = new Node("EditorNode");
         private Vector3f startPoint;
         private Geometry currentLineGeom;
-        private final float gridSize = 1.0f;
-        private float wallHeight = 3.0f;
-        private float wallThickness = 0.2f;
-        private final ColorRGBA[] colors = {ColorRGBA.DarkGray, ColorRGBA.Red, ColorRGBA.Blue, ColorRGBA.Green, ColorRGBA.Yellow, ColorRGBA.Magenta, ColorRGBA.Cyan};
+
+        private final float gridSize = 1.0f,
+                            wallHeight = 3.0f,
+                            wallThickness = 0.2f;
+
+        private final ColorRGBA[] colors =
+        {
+            ColorRGBA.DarkGray,
+            ColorRGBA.Red,
+            ColorRGBA.Blue,
+            ColorRGBA.Green,
+            ColorRGBA.Yellow,
+            ColorRGBA.Magenta,
+            ColorRGBA.Cyan
+        };
 
         @Override
-        protected void initialize(Application app) {
+        protected void initialize(Application app)
+        {
             createGrid();
         }
 
-        private void createGrid() {
+        private void createGrid()
+        {
             Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
             mat.setColor("Color", new ColorRGBA(1, 1, 1, 0.4f));
             mat.getAdditionalRenderState().setBlendMode(com.jme3.material.RenderState.BlendMode.Alpha);
@@ -116,136 +136,200 @@ public class PROJECT extends SimpleApplication implements ActionListener {
             
             int lines = 50;
             float size = lines * gridSize;
-            for (int i = -lines; i <= lines; i++) {
-                Line lx = new Line(new Vector3f(i * gridSize, 0.05f, -size), new Vector3f(i * gridSize, 0.05f, size));
-                Geometry gx = new Geometry("GridX", lx); gx.setMaterial(mat); editorNode.attachChild(gx);
-                Line lz = new Line(new Vector3f(-size, 0.05f, i * gridSize), new Vector3f(size, 0.05f, i * gridSize));
-                Geometry gz = new Geometry("GridZ", lz); gz.setMaterial(mat); editorNode.attachChild(gz);
+
+            for (int i = -lines; i <= lines; i++)
+            {
+                Geometry gx =
+                        new Geometry("GridX",
+                                new Line(
+                                    new Vector3f(i * gridSize, 0.05f, -size),
+                                    new Vector3f(i * gridSize, 0.05f, size)
+                                )
+                        );
+
+                gx.setMaterial(mat);
+                editorNode.attachChild(gx);
+
+                Geometry gz =
+                        new Geometry("GridZ",
+                            new Line(
+                                    new Vector3f(-size, 0.05f, i * gridSize),
+                                    new Vector3f(size, 0.05f, i * gridSize)
+                            )
+                        );
+
+                gz.setMaterial(mat);
+                editorNode.attachChild(gz);
             }
             editorNode.setQueueBucket(RenderQueue.Bucket.Transparent);
         }
 
         @Override
-        protected void onEnable() {
+        protected void onEnable()
+        {
             rootNode.attachChild(editorNode);
+
             inputManager.addMapping("Draw", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
             inputManager.addListener(this, "Draw");
+            inputManager.setCursorVisible(false);
+
             flyCam.setDragToRotate(false);
             flyCam.setMoveSpeed(20f);
-            inputManager.setCursorVisible(false);
         }
 
         @Override
-        protected void onDisable() {
+        protected void onDisable()
+        {
             editorNode.removeFromParent();
             inputManager.deleteMapping("Draw");
             inputManager.removeListener(this);
+
             if (currentLineGeom != null) currentLineGeom.removeFromParent();
+
             startPoint = null;
         }
 
         @Override
-        public void update(float tpf) {
-            if (startPoint != null) {
-                Vector3f end = getSnappedPoint();
+        public void update(float tpf)
+        {
+            if (startPoint != null)
+            {
                 if (currentLineGeom != null) currentLineGeom.removeFromParent();
-                Line l = new Line(startPoint, end);
-                currentLineGeom = new Geometry("Line", l);
+
+                currentLineGeom = new Geometry("Line", new Line(startPoint, getSnappedPoint()));
                 Material m = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
                 m.setColor("Color", ColorRGBA.Red);
+
                 currentLineGeom.setMaterial(m);
                 editorNode.attachChild(currentLineGeom);
             }
         }
 
         @Override
-        public void onAction(String name, boolean isPressed, float tpf) {
-            if (name.equals("Draw")) {
-                if (isPressed) startPoint = getSnappedPoint();
-                else if (startPoint != null) {
+        public void onAction(String name, boolean isPressed, float tpf)
+        {
+            if (name.equals("Draw"))
+            {
+                if (isPressed) { startPoint = getSnappedPoint(); return; }
+                if (startPoint != null)
+                {
                     Vector3f end = getSnappedPoint();
                     if (startPoint.distance(end) > 0.1f) createWall(startPoint, end);
                     startPoint = null;
-                    if (currentLineGeom != null) { currentLineGeom.removeFromParent(); currentLineGeom = null; }
+
+                    if (currentLineGeom != null)
+                    {
+                        currentLineGeom.removeFromParent();
+                        currentLineGeom = null;
+                    }
                 }
             }
         }
 
-        private Vector3f getSnappedPoint() {
+        private Vector3f getSnappedPoint()
+        {
             Vector2f center = new Vector2f(settings.getWidth() / 2f, settings.getHeight() / 2f);
             Vector3f origin = cam.getWorldCoordinates(center, 0f).clone();
-            Vector3f dir = cam.getWorldCoordinates(center, 1f).subtractLocal(origin).normalizeLocal();
+            Vector3f dir    = cam.getWorldCoordinates(center, 1f).subtractLocal(origin).normalizeLocal();
+            Vector3f pos    = origin.add(dir.mult((-origin.y / dir.y)));
+
             if (Math.abs(dir.y) < 0.001f) return origin;
-            float t = -origin.y / dir.y;
-            Vector3f pos = origin.add(dir.mult(t));
-            
+
             Vector3f nearest = null; float minDist = 0.5f;
-            for (com.jme3.scene.Spatial s : levelNode.getChildren()) {
+
+            for (com.jme3.scene.Spatial s : l_node.getChildren())
+            {
                 Vector3f s1 = s.getUserData("s"), s2 = s.getUserData("e");
-                if (s1 != null && pos.distance(s1) < minDist) { minDist = pos.distance(s1); nearest = s1; }
-                if (s2 != null && pos.distance(s2) < minDist) { minDist = pos.distance(s2); nearest = s2; }
+                if (s1 != null && pos.distance(s1) < minDist)
+                {
+                    minDist = pos.distance(s1);
+                    nearest = s1;
+                }
+                if (s2 != null && pos.distance(s2) < minDist)
+                {
+                    minDist = pos.distance(s2);
+                    nearest = s2;
+                }
             }
             if (nearest != null) return nearest;
             return new Vector3f(Math.round(pos.x / gridSize) * gridSize, 0, Math.round(pos.z / gridSize) * gridSize);
         }
 
-        private void createWall(Vector3f start, Vector3f end) {
-            float len = start.distance(end);
-            Box b = new Box(len / 2f, wallHeight / 2f, wallThickness / 2f);
-            Geometry wall = new Geometry("Wall", b);
+        private void createWall(Vector3f start, Vector3f end)
+        {
+            Geometry wall = new Geometry("Wall", new Box(start.distance(end) / 2f, wallHeight / 2f, wallThickness / 2f));
             Material m = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+            RigidBodyControl p = new RigidBodyControl(0);
+
             m.setColor("Color", colors[FastMath.nextRandomInt(0, colors.length - 1)].mult(0.5f));
+
             wall.setMaterial(m);
             wall.setLocalTranslation(start.add(end).divide(2f).setY(wallHeight / 2f));
             wall.rotate(0, -FastMath.atan2(end.z - start.z, end.x - start.x), 0);
             wall.setUserData("s", start.clone()); wall.setUserData("e", end.clone());
-            RigidBodyControl p = new RigidBodyControl(0);
             wall.addControl(p);
-            bulletAppState.getPhysicsSpace().add(p);
-            levelNode.attachChild(wall);
+
+            b_state.getPhysicsSpace().add(p);
+            l_node.attachChild(wall);
         }
 
         @Override protected void cleanup(Application app) {}
     }
 
-    private class GameState extends BaseAppState implements ActionListener {
+    private class GState extends BaseAppState implements ActionListener
+    {
         private BetterCharacterControl player;
         private final Node playerNode = new Node();
         private boolean left, right, up, down;
 
         @Override
-        protected void initialize(Application app) {
+        protected void initialize(Application app)
+        {
             player = new BetterCharacterControl(0.5f, 1.8f, 80f);
             playerNode.addControl(player);
         }
 
         @Override
-        protected void onEnable() {
+        protected void onEnable()
+        {
             inputManager.addMapping("L", new KeyTrigger(KeyInput.KEY_A));
             inputManager.addMapping("R", new KeyTrigger(KeyInput.KEY_D));
             inputManager.addMapping("U", new KeyTrigger(KeyInput.KEY_W));
             inputManager.addMapping("D", new KeyTrigger(KeyInput.KEY_S));
             inputManager.addListener(this, "L", "R", "U", "D");
-            flyCam.setDragToRotate(false);
             inputManager.setCursorVisible(false);
-            player.warp(cam.getLocation().subtract(0, 1.6f, 0));
-            bulletAppState.getPhysicsSpace().add(player);
-            rootNode.attachChild(playerNode);
+
+            flyCam.setDragToRotate(false);
             flyCam.setMoveSpeed(0);
+
+            player.warp(cam.getLocation().subtract(0, 1.6f, 0));
+
+            b_state.getPhysicsSpace().add(player);
+
+            rootNode.attachChild(playerNode);
         }
 
         @Override
-        protected void onDisable() {
-            bulletAppState.getPhysicsSpace().remove(player);
+        protected void onDisable()
+        {
+            b_state.getPhysicsSpace().remove(player);
+
             playerNode.removeFromParent();
+
             inputManager.removeListener(this);
-            inputManager.deleteMapping("L"); inputManager.deleteMapping("R"); inputManager.deleteMapping("U"); inputManager.deleteMapping("D");
+            inputManager.deleteMapping("L");
+            inputManager.deleteMapping("R");
+            inputManager.deleteMapping("U");
+            inputManager.deleteMapping("D");
+
             flyCam.setMoveSpeed(20f);
         }
 
         @Override
-        public void onAction(String name, boolean isPressed, float tpf) {
-            switch (name) {
+        public void onAction(String name, boolean isPressed, float tpf)
+        {
+            switch (name)
+            {
                 case "L" -> left = isPressed;
                 case "R" -> right = isPressed;
                 case "U" -> up = isPressed;
@@ -254,14 +338,17 @@ public class PROJECT extends SimpleApplication implements ActionListener {
         }
 
         @Override
-        public void update(float tpf) {
+        public void update(float tpf)
+        {
             Vector3f camDir = cam.getDirection().clone().setY(0).normalizeLocal();
             Vector3f camLeft = cam.getLeft().clone().setY(0).normalizeLocal();
             Vector3f walk = new Vector3f();
+
             if (left) walk.addLocal(camLeft);
             if (right) walk.addLocal(camLeft.negateLocal());
             if (up) walk.addLocal(camDir);
             if (down) walk.addLocal(camDir.negateLocal());
+
             player.setWalkDirection(walk.normalizeLocal().multLocal(8f));
             cam.setLocation(playerNode.getWorldTranslation().add(0, 1.6f, 0));
         }
