@@ -64,7 +64,7 @@ public class PROJECT extends SimpleApplication implements ActionListener {
         g_state = new GState();
 
         stateManager.attach(g_state);
-        inputManager.addMapping("ToggleMode", new KeyTrigger(KeyInput.KEY_F1), new KeyTrigger(KeyInput.KEY_F2));
+        inputManager.addMapping("ToggleMode", new KeyTrigger(KeyInput.KEY_F1));
         inputManager.addListener(this, "ToggleMode");
         
         flyCam.setMoveSpeed(20f);
@@ -91,7 +91,7 @@ public class PROJECT extends SimpleApplication implements ActionListener {
                 stateManager.attach(g_state);
                 return;
             }
-            if (!stateManager.hasState(g_state))
+            if (stateManager.hasState(g_state))
             {
                 stateManager.detach(g_state);
                 stateManager.attach(e_state);
