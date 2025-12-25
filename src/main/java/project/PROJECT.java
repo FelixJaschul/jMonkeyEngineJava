@@ -77,7 +77,7 @@ public class PROJECT extends SimpleApplication implements ActionListener {
         chMat.setColor("Color", ColorRGBA.White);
         Geometry ch = new Geometry("Crosshair", new Quad(4, 4));
         ch.setMaterial(chMat);
-        ch.setLocalTranslation(settings.getWidth() / 2 - 2, settings.getHeight() / 2 - 2, 0);
+        ch.setLocalTranslation((float) settings.getWidth() / 2 - 2, (float) settings.getHeight() / 2 - 2, 0);
         guiNode.attachChild(ch);
     }
 
@@ -95,13 +95,13 @@ public class PROJECT extends SimpleApplication implements ActionListener {
     }
 
     private class EditorState extends BaseAppState implements ActionListener {
-        private Node editorNode = new Node("EditorNode");
+        private final Node editorNode = new Node("EditorNode");
         private Vector3f startPoint;
         private Geometry currentLineGeom;
-        private float gridSize = 1.0f;
+        private final float gridSize = 1.0f;
         private float wallHeight = 3.0f;
         private float wallThickness = 0.2f;
-        private ColorRGBA[] colors = {ColorRGBA.DarkGray, ColorRGBA.Red, ColorRGBA.Blue, ColorRGBA.Green, ColorRGBA.Yellow, ColorRGBA.Magenta, ColorRGBA.Cyan};
+        private final ColorRGBA[] colors = {ColorRGBA.DarkGray, ColorRGBA.Red, ColorRGBA.Blue, ColorRGBA.Green, ColorRGBA.Yellow, ColorRGBA.Magenta, ColorRGBA.Cyan};
 
         @Override
         protected void initialize(Application app) {
@@ -210,7 +210,7 @@ public class PROJECT extends SimpleApplication implements ActionListener {
 
     private class GameState extends BaseAppState implements ActionListener {
         private BetterCharacterControl player;
-        private Node playerNode = new Node();
+        private final Node playerNode = new Node();
         private boolean left, right, up, down;
 
         @Override
@@ -245,10 +245,12 @@ public class PROJECT extends SimpleApplication implements ActionListener {
 
         @Override
         public void onAction(String name, boolean isPressed, float tpf) {
-            if (name.equals("L")) left = isPressed;
-            else if (name.equals("R")) right = isPressed;
-            else if (name.equals("U")) up = isPressed;
-            else if (name.equals("D")) down = isPressed;
+            switch (name) {
+                case "L" -> left = isPressed;
+                case "R" -> right = isPressed;
+                case "U" -> up = isPressed;
+                case "D" -> down = isPressed;
+            }
         }
 
         @Override
